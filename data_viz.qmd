@@ -1,5 +1,161 @@
 ---
 title: "data_viz"
 format: html
+editor_options: 
+  chunk_output_type: console
 ---
+```{r}
+rm(list = ls())
+```
+
+```{r}
+# General use packages:
+library(tidyverse)
+library(here)
+library(janitor)
+
+# Specifically for plots:
+library(patchwork)
+library(ggrepel)
+library(gghighlight)
+library(paletteer)
+library(ggExtra)
+library(ggbeeswarm)
+
+# And for another dataset we'll explore:
+library(gapminder)
+
+# Spatial
+library(sf)
+```
+
+```{r}
+lizards <- read_csv(here("data_tidy", "lizards.csv"))
+```
+
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) + geom_point() + geom_line()
+
+# or
+
+ggplot(data = lizards) + geom_point(aes(x = total_length, y = weight))
+
+# or
+
+ggplot() + geom_point(data = lizards, aes(x = total_length, y = weight))
+```
+
+## playing with plot geometries
+```{r}
+ggplot(data = lizards, aes(x = total_length)) + geom_histogram()
+```
+
+## jitter arbitrarily spreads points around compared to point
+```{r}
+ggplot(data = lizards, aes(y = common_name, x = weight)) + geom_jitter()
+```
+
+# lets make the ugliest graph possible
+```{r}
+ggplot(lizards, aes(x = weight)) + 
+  geom_histogram(color = "orange", 
+                 fill = "purple",
+                 size = 2,
+                 linetype = "dotted")
+```
+
+# color?
+### coolors.co
+
+# shapes?
+### search r shape codes
+
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(color = "#eb5e28", 
+             fill = "#252422",
+             shape = 22, 
+             size = 3, 
+             alpha = 0.4)
+```
+
+# updating an aesthetic based on variable
+# doing this scale color discrete thing highlights a specific common name
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = common_name, 
+                 size = total_length), 
+             alpha = 0.2) + 
+  scale_color_discrete(type = c("#120309", "#95B2B8", "#95B2B8", "#95B2B8", "#95B2B8", "#95B2B8", "#95B2B8"))
+```
+
+# themes
+### some cool ones
+- theme_minimal()
+- theme_bw()
+- theme_light()
+```{r}
+ggplot(data = lizards, aes(x = site, y = weight)) +
+  geom_jitter(aes(color = common_name)) +
+  theme_minimal()
+```
+
+# axis labels
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point() +
+  labs(x = "Total length (mm)",
+       y = "Weight (grams)",
+       title = "Lizard size")
+```
+
+# faceting
+### splits graph into multiple graphs by every value in a variable
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point() +
+  facet_wrap(~common_name, ncol = 3, scales = "free") + 
+  labs(x = "Total length (mm)",
+       y = "weight (grams)")
+```
+
+## facets into groups
+### groups are, if tail broken or not, sex
+### sex on y, tails on x
+#### f, j, m merely how sex data was stored
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point() +
+  facet_grid(sex ~ tail)
+```
+
+# reordering
+## fct_reorder()
+### in this case, reorders common name by highest to lowest count
+```{r}
+lizard_counts <- lizards %>% 
+  count(common_name)
+
+ggplot(data = lizard_counts, aes(y = fct_reorder(common_name, n), x = n)) +
+  geom_col()
+```
+
+# putting it all together
+```{r}
+ggplot(lizards, aes(x = total_length, y = weight)) + 
+  geom_point(aes(color = common_name, shape = common_name), size = 2) + 
+  theme_void() + 
+  labs(x = "total length (mm)", y = "weight (g)", color = "lizard species") + 
+  facet_wrap(~common_name, scales = "free")
+```
+
+# one more
+### but how to change labels on sex and tail?
+```{r}
+ggplot(lizards, aes(y = fct_infreq(common_name))) + 
+  geom_bar(aes(fill = site)) + 
+  theme_dark() + 
+  labs(x = "lizard counts", y = "species") + 
+  facet_grid(sex ~ tail)
+```
 
